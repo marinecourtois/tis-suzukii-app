@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-  ScatterChart, Scatter, ZAxis
+  Tooltip as RechartsTooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import {
-  Download, SlidersHorizontal, BarChart3, Cpu, Check, Leaf,
-  Layers, Target, ShieldCheck, BookOpen, FlaskConical, Play,
-  Plus, FileCode, ChevronDown, Search, Calendar, Coins
+  Download, BarChart3, Cpu, Check, Leaf,
+  Layers, BookOpen, FlaskConical, Play,
+  Plus, FileCode, ChevronDown, Search, Calendar, Home,
+  Settings, ChevronsUpDown, SlidersHorizontal, Activity
 } from 'lucide-react';
 
 import Latex from './components/Latex';
@@ -16,98 +16,37 @@ import {
   StrawberryBotanicalPlate,
   CherryBotanicalPlate,
   TisMechanismDiagram,
-  PastoralLandscape
+  PastoralLandscape,
+  LarvaIcon,
+  SterileFlyIcon,
+  StrawberryMiniIcon,
+  CherryMiniIcon,
+  InvasionBarsIcon,
+  CoinsStackIcon,
+  SproutMiniIcon
 } from './components/BotanicalIllustrations';
 import OverviewPopulationChart from './components/OverviewPopulationChart';
 import ScientificReportModal from './components/ScientificReportModal';
+import AgentDynamicsCharts from './components/AgentDynamicsCharts';
+import ParametersView from './components/ParametersView';
+import ModelArchitectureView from './components/ModelArchitectureView';
+import ParetoFrontierChart from './components/ParetoFrontierChart';
+import RepetitionsStripPlot from './components/RepetitionsStripPlot';
+import AgronomicSynthesisCard from './components/AgronomicSynthesisCard';
+import {
+  ENGINE_VERSION,
+  SCHEMA_VERSION,
+  TOTAL_FRUITS_SCALE30,
+  STRATEGIES,
+  STRATEGY_MAP,
+  INOCULUM_LEVELS,
+  INOCULUM_MAP,
+  DEFAULT_MODEL_PARAMS,
+  SCIENTIFIC_PARAMETERS_CATALOG
+} from './engine/abmEngine';
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
-// ============================================================================
-// CONSTANTES DU MODÈLE SCIENTIFIQUE (NOTEBOOK MODELLY ABM)
-// ============================================================================
-const TOTAL_FRUITS = 90000;
-const ENGINE_VERSION = 'Modelly-ABM v2.4.0 (Échelle 30 • FastRandom)';
-const SCHEMA_VERSION = 'tis-schema-2025.2';
-
-const STRATEGIES = [
-  {
-    id: 'No TIS',
-    label: 'Témoin sans TIS',
-    short: 'Témoin (No TIS)',
-    color: '#657068',
-    dash: '2 2',
-    symbol: '○',
-    schedule: 'Aucun lâcher (0 insecte)',
-    operationalRule: 'Référence naturelle sans intervention biologique.',
-    relativeBudget: 0.0
-  },
-  {
-    id: 'Daily',
-    label: 'Lâchers quotidiens',
-    short: 'Quotidien',
-    color: '#BF532E',
-    dash: '0',
-    symbol: '▲',
-    schedule: 'B / T chaque jour de J0 à J(T-1)',
-    operationalRule: 'Apport journalier constant fractionnant le budget total sur toute la saison.',
-    relativeBudget: 1.40
-  },
-  {
-    id: 'Every 3 days',
-    label: 'Lâchers tous les 3 jours',
-    short: 'J+3',
-    color: '#547B91',
-    dash: '6 3',
-    symbol: '■',
-    schedule: 'Lâcher périodique à J0, J3, J6, J9...',
-    operationalRule: 'Fractionnement intermédiaire aligné sur le cycle de prophylaxie (3 jours).',
-    relativeBudget: 1.00
-  },
-  {
-    id: 'Every 7 days',
-    label: 'Lâchers tous les 7 jours',
-    short: 'J+7',
-    color: '#C88A2B',
-    dash: '8 3 2 3',
-    symbol: '◆',
-    schedule: 'Lâcher hebdomadaire à J0, J7, J14...',
-    operationalRule: 'Synchronisé sur l’espérance de vie moyenne des mâles stériles (μ_S = 7 jours).',
-    relativeBudget: 0.72
-  },
-  {
-    id: '70% init + 7d maint',
-    label: 'Lâcher initial 70 % + maintenance 7j',
-    short: '70% init + maintenance',
-    color: '#145A3D',
-    dash: '0',
-    symbol: '★',
-    schedule: '70 % du budget à J0 + 30 % répartis tous les 7 jours',
-    operationalRule: 'Inondation initiale massive des femelles fondatrices suivie d’une maintenance hebdomadaire.',
-    relativeBudget: 0.86
-  },
-  {
-    id: '100% init',
-    label: 'Lâcher initial de 100 %',
-    short: '100% initial',
-    color: '#A83D36',
-    dash: '4 4',
-    symbol: '●',
-    schedule: '100 % du budget lâché en une seule fois à J0',
-    operationalRule: 'Saturation maximale à J0 sans aucun renouvellement après la mortalité des mâles stériles (~J14).',
-    relativeBudget: 1.25
-  }
-];
-
-const STRATEGY_MAP = new Map(STRATEGIES.map((s) => [s.id, s]));
-
-const INVASION_LEVELS = [
-  { id: 'Faible', label: 'Faible', males: 90, females: 90, total: 180, multiplier: 0.32, unit: 'adultes à J0' },
-  { id: 'Modérée', label: 'Modérée', males: 300, females: 300, total: 600, multiplier: 1.0, unit: 'adultes à J0' },
-  { id: 'Forte', label: 'Forte', males: 900, females: 900, total: 1800, multiplier: 2.65, unit: 'adultes à J0' }
-];
-
-const INVASION_MAP = new Map(INVASION_LEVELS.map((inv) => [inv.id, inv]));
 const BUDGET_PRESETS = [0, 1000, 4500, 9000, 18000];
 
 const REMATING_MODES = [
@@ -130,83 +69,7 @@ const REMATING_LABEL_MAP = {
   first: 'Accouplement unique'
 };
 
-// Catalogue des paramètres officiels (Section 11)
-const SCIENTIFIC_PARAMETERS_CATALOG = [
-  {
-    symbol: 'N_{fruits}',
-    name: 'Production totale de fruits (Échelle 30)',
-    unit: 'fruits',
-    defaultValue: '90 000',
-    allowedRange: '3 000 – 90 000',
-    source: 'Notebook Modelly ABM (scale_factor = 30 × 3 000 fruits)'
-  },
-  {
-    symbol: 'T_{cult}',
-    name: 'Horizon phénologique de la culture',
-    unit: 'jours (j)',
-    defaultValue: 'Fraise : 100 j | Cerise : 25 j',
-    allowedRange: '25 – 120 j',
-    source: 'Protocole agronomique Fraise (continu) vs Cerise (synchrone)'
-  },
-  {
-    symbol: '\\mu_S, \\sigma_S',
-    name: 'Espérance de vie des mâles stériles (SterileMales_Agent)',
-    unit: 'jours (j)',
-    defaultValue: '7.0 j (σ = 2.1 j), tronquée ≥ 1 j',
-    allowedRange: '4.0 – 12.0 j',
-    source: 'Calibration irradiation TIS (CV = 0.30)'
-  },
-  {
-    symbol: '\\mu_W, \\sigma_W',
-    name: 'Espérance de vie des adultes sauvages (♂ et ♀)',
-    unit: 'jours (j)',
-    defaultValue: '25.0 j (σ = 7.5 j), tronquée ≥ 1 j',
-    allowedRange: '15.0 – 35.0 j',
-    source: 'Biologie D. suzukii en conditions tempérées (CV = 0.30)'
-  },
-  {
-    symbol: '\\eta_m',
-    name: 'Compétitivité d’accouplement des mâles stériles',
-    unit: 'ratio',
-    defaultValue: '0.80',
-    allowedRange: '0.10 – 1.00',
-    source: 'Females_Agent.mate() — P(S) = (0.80·S) / (W + 0.80·S)'
-  },
-  {
-    symbol: '\\eta_{\\text{sperm}}',
-    name: 'Compétitivité spermatique stérile (Accouplement multiple)',
-    unit: 'ratio',
-    defaultValue: '0.59',
-    allowedRange: '0.10 – 1.00',
-    source: 'Females_Agent.lay_eggs() — P(fertile) = n_f / (n_f + 0.59·n_s)'
-  },
-  {
-    symbol: 'h_{\\text{fertile}}',
-    name: 'Hasard journalier de pourriture après piqûre fertile',
-    unit: 'jour⁻¹',
-    defaultValue: '0.3054',
-    allowedRange: '0.0500 – 0.6000',
-    source: 'Fruit_Agent.step() — rot_hazard_fertile'
-  },
-  {
-    symbol: 'h_{\\text{stérile}}',
-    name: 'Hasard journalier de pourriture après piqûre stérile seule',
-    unit: 'jour⁻¹',
-    defaultValue: '0.2310',
-    allowedRange: '0.0500 – 0.5000',
-    source: 'Fruit_Agent.step() — rot_hazard_sterile (inoculation fongique cuticulaire)'
-  },
-  {
-    symbol: 'S_{\\text{rot}}(t)',
-    name: 'Seuil de pourriture par score larvaire cumulé',
-    unit: 'score',
-    defaultValue: 'S(t) = n + 0.5·(n·t - Σ c_i) ≥ 5.0',
-    allowedRange: '3.0 – 10.0',
-    source: 'Forme fermée O(1) dans Fruit_Agent'
-  }
-];
-
-// Ancrages exacts du notebook Python pour Fraise & Cerise (Budget 9000, invasion moyenne)
+// Ancrages de référence scientifique pour les bilans comparatifs (Budget 1000 & 9000)
 const EXACT_ANCHOR_STRAWBERRY = {
   'No TIS': { recoltes_sains_pct: 50.7, recoltes_steriles_pct: 0.0, recoltes_larves_pct: 15.9, pourris_larves_pct: 30.1, pourris_steriles_pct: 0.0, pourris_naturels_pct: 0.4, larves_produites: 74415, sd_sains_pct: 1.4 },
   'Daily': { recoltes_sains_pct: 82.9, recoltes_steriles_pct: 3.6, recoltes_larves_pct: 1.8, pourris_larves_pct: 2.8, pourris_steriles_pct: 3.4, pourris_naturels_pct: 1.2, larves_produites: 7350, sd_sains_pct: 0.9 },
@@ -229,82 +92,103 @@ function round1(v) {
   return Math.round(v * 10) / 10;
 }
 
-function computeSingleOutcome(culture, invasionId, budget, remating, strategyId, bioOverrides = null) {
+function computeSingleOutcome(culture, inoculumId, budget, remating, strategyId, bioOverrides = null) {
   const isCherry = culture === 'Cerise';
   const anchorMap = isCherry ? EXACT_ANCHOR_CHERRY : EXACT_ANCHOR_STRAWBERRY;
   const base = anchorMap[strategyId] || anchorMap['Every 3 days'];
 
-  // Ajustement en fonction de la pression d'invasion
-  const invObj = INVASION_MAP.get(invasionId);
+  // Ajustement en fonction de l'inoculum de départ
+  const invObj = INOCULUM_MAP.get(inoculumId) || INOCULUM_MAP.get('Modérée');
   const invMultiplier = invObj ? invObj.multiplier : 1.0;
   
-  // Prise en compte des paramètres biologiques avancés et du réaccouplement
+  // Prise en compte des paramètres biologiques
   const etaMating = bioOverrides?.etaMating ?? 0.8;
   const etaSperm = bioOverrides?.etaSperm ?? 0.59;
   const bioFactor = remating === 'first' ? 1.05 : (etaMating / 0.8) * (etaSperm / 0.59);
 
-  // Ajustement en fonction du budget
-  const budgetScale = budget === 0 ? 0 : Math.max(0.1, Math.min(1.8, Math.sqrt(budget / 1000) * bioFactor));
+  // Cas témoin sans TIS ou budget nul : aucun mâle stérile lâché
+  const isNoTis = strategyId === 'No TIS' || budget === 0;
+  const effectiveBase = isNoTis ? anchorMap['No TIS'] : base;
 
-  const pourris_larves_pct = round1(Math.max(0.2, base.pourris_larves_pct * invMultiplier * (strategyId === 'No TIS' ? 1 : 1 / budgetScale)));
-  const recoltes_steriles_pct = round1(strategyId === 'No TIS' || budget === 0 ? 0 : base.recoltes_steriles_pct * Math.min(1.5, budgetScale));
-  const pourris_steriles_pct = round1(strategyId === 'No TIS' || budget === 0 ? 0 : base.pourris_steriles_pct * Math.min(1.5, budgetScale));
-  const pourris_total_pct = round1(pourris_larves_pct + pourris_steriles_pct + base.pourris_naturels_pct);
-  const recoltes_sains_pct = round1(Math.max(10, 100 - pourris_total_pct - recoltes_steriles_pct - base.recoltes_larves_pct));
+  // Facteur d'échelle du budget (toujours fini, évite toute division par zéro)
+  const budgetScale = isNoTis ? 1.0 : Math.max(0.2, Math.min(2.0, Math.sqrt(budget / 1000) * bioFactor));
+
+  const pourris_larves_pct = round1(
+    isNoTis
+      ? effectiveBase.pourris_larves_pct * invMultiplier
+      : Math.max(0.2, Math.min(65.0, (effectiveBase.pourris_larves_pct * invMultiplier) / budgetScale))
+  );
+
+  const recoltes_steriles_pct = round1(
+    isNoTis ? 0.0 : base.recoltes_steriles_pct * Math.min(1.5, budgetScale)
+  );
+
+  const pourris_steriles_pct = round1(
+    isNoTis ? 0.0 : base.pourris_steriles_pct * Math.min(1.5, budgetScale)
+  );
+
+  const pourris_naturels_pct = effectiveBase.pourris_naturels_pct;
+  const recoltes_larves_pct = effectiveBase.recoltes_larves_pct;
+
+  const pourris_total_pct = round1(pourris_larves_pct + pourris_steriles_pct + pourris_naturels_pct);
+  const recoltes_sains_pct = round1(
+    Math.max(5.0, Math.min(96.0, 100 - pourris_total_pct - recoltes_steriles_pct - recoltes_larves_pct))
+  );
   const sterile_only_total_pct = round1(recoltes_steriles_pct + pourris_steriles_pct);
-  const larves_produites = Math.round(base.larves_produites * invMultiplier * (strategyId === 'No TIS' ? 1 : 1 / Math.max(0.2, budgetScale)));
+
+  const larves_produites = isNoTis
+    ? Math.round(effectiveBase.larves_produites * invMultiplier)
+    : Math.round(Math.max(100, (effectiveBase.larves_produites * invMultiplier) / Math.max(0.2, budgetScale)));
 
   return {
     culture,
-    invasion: invasionId,
+    invasion: inoculumId,
+    inoculum: inoculumId,
     budget,
     remating,
     strategy: strategyId,
     recoltes_sains_pct,
-    recoltes_sains_nb: Math.round((recoltes_sains_pct / 100) * TOTAL_FRUITS),
+    recoltes_sains_nb: Math.round((recoltes_sains_pct / 100) * TOTAL_FRUITS_SCALE30),
     recoltes_steriles_pct,
-    recoltes_larves_pct: base.recoltes_larves_pct,
+    recoltes_larves_pct,
     pourris_larves_pct,
     pourris_steriles_pct,
-    pourris_naturels_pct: base.pourris_naturels_pct,
+    pourris_naturels_pct,
     pourris_total_pct,
     sterile_only_total_pct,
     larves_produites,
-    sd_sains_pct: base.sd_sains_pct,
+    sd_sains_pct: effectiveBase.sd_sains_pct,
     sd_larves: Math.round(larves_produites * 0.05)
   };
 }
 
-// ============================================================================
-// COMPOSANT PRINCIPAL DE L'APPLICATION
-// ============================================================================
 export default function App() {
-  // Navigation principale (6 espaces)
-  // 'overview' | 'experiments' | 'studio' | 'comparison' | 'analytics' | 'protocol'
-  const [activeSpace, setActiveSpace] = useState('overview');
+  // Navigation principale (Espaces de travail)
+  // 'overview' | 'parameters' | 'model' | 'dynamics' | 'studio' | 'comparison' | 'analytics' | 'experiments' | 'protocol'
+  const searchTab = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null;
+  const initialTab = searchTab && ['overview', 'parameters', 'model', 'dynamics', 'studio', 'comparison', 'analytics', 'experiments', 'protocol'].includes(searchTab)
+    ? searchTab
+    : 'overview';
 
-  // Sous-onglets de la vue d'ensemble (comme dans la maquette : Vue d'ensemble, Protocole, Comparaison, Analyses)
-  const [activeSubTab, setActiveSubTab] = useState('overview');
+  const [activeSpace, setActiveSpace] = useState(initialTab);
+  const [activeSubTab, setActiveSubTab] = useState(initialTab);
 
   // Paramètres du scénario actif
   const [culture, setCulture] = useState('Fraise');
-  const [invasion, setInvasion] = useState('Modérée');
+  const [inoculum, setInoculum] = useState('Modérée'); // Remplacement de pression d'invasion par inoculum de départ
   const [budget, setBudget] = useState(1000);
   const [remating, setRemating] = useState('preference');
   const [selectedStrategy, setSelectedStrategy] = useState('Every 3 days'); // J+3 par défaut (comme maquette)
+
+  // Paramètres globaux du modèle ABM
+  const [modelParams, setModelParams] = useState(DEFAULT_MODEL_PARAMS);
 
   // Mode Simulation Studio (Essentiel vs Avancé)
   const [studioMode, setStudioMode] = useState('essential');
   const [randomSeed, setRandomSeed] = useState(42);
   const [repetitions, setRepetitions] = useState(30);
-  const [bioParams, setBioParams] = useState({
-    etaMating: 0.8,
-    etaSperm: 0.59,
-    rotHazardFertile: 0.3054,
-    rotHazardSterile: 0.231
-  });
 
-  // Expériences enregistrées (Section 10)
+  // Expériences enregistrées
   const [savedExperiments, setSavedExperiments] = useState([
     {
       id: 'EXP-2025-01',
@@ -361,13 +245,16 @@ export default function App() {
   const [notification, setNotification] = useState(null);
   const [publicationMode, setPublicationMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [heatmapMetric, setHeatmapMetric] = useState('recoltes_sains_pct');
+  const [simStatus, setSimStatus] = useState('idle'); // 'idle' | 'running' | 'completed'
+  const [liveSimDay, setLiveSimDay] = useState(120);
 
-  const horizon = culture === 'Fraise' ? 100 : 25;
+  const horizon = culture === 'Fraise' ? modelParams.horizonFraise : modelParams.horizonCerise;
 
   // Calcul des résultats courants
   const currentResultsList = useMemo(() => {
-    return STRATEGIES.map((s) => computeSingleOutcome(culture, invasion, budget, remating, s.id, bioParams));
-  }, [culture, invasion, budget, remating, bioParams]);
+    return STRATEGIES.map((s) => computeSingleOutcome(culture, inoculum, budget, remating, s.id, modelParams));
+  }, [culture, inoculum, budget, remating, modelParams]);
 
   const summaryStats = useMemo(() => {
     const control = currentResultsList.find((r) => r.strategy === 'No TIS') || currentResultsList[0];
@@ -408,28 +295,47 @@ export default function App() {
     return series;
   }, [horizon, currentResultsList, budget]);
 
-  // Lancement et sauvegarde d'expérience
+  // Lancement animé et sauvegarde d'expérience (Traçage en direct)
   const handleRunAndSaveExperiment = () => {
-    const newId = `EXP-2025-0${savedExperiments.length + 1}`;
-    const stratObj = STRATEGY_MAP.get(selectedStrategy);
-    const newExp = {
-      id: newId,
-      name: `${culture} — ${stratObj?.short || selectedStrategy} (${budget.toLocaleString('fr-FR')} ♂)`,
-      culture,
-      invasion,
-      budget,
-      remating,
-      strategy: selectedStrategy,
-      seed: randomSeed,
-      repetitions,
-      timestamp: new Date().toISOString().slice(0, 16).replace('T', ' ')
-    };
-    setSavedExperiments((prev) => [newExp, ...prev]);
-    setNotification(`Simulation lancée : ${newExp.name} enregistrée avec l'ID ${newId}.`);
+    if (simStatus === 'running') return;
+    setSimStatus('running');
+    setLiveSimDay(0);
+    const targetHorizon = culture === 'Fraise' ? 100 : 25;
+    const stepIncrement = culture === 'Fraise' ? 2 : 1;
+    const stepIntervalMs = 35; // ~1.8 s de traçage fluide
+
+    const timer = setInterval(() => {
+      setLiveSimDay((prev) => {
+        const next = prev + stepIncrement;
+        if (next >= targetHorizon) {
+          clearInterval(timer);
+          const newId = `EXP-2025-0${savedExperiments.length + 1}`;
+          const stratObj = STRATEGY_MAP.get(selectedStrategy);
+          const newExp = {
+            id: newId,
+            name: `${culture} — ${stratObj?.short || selectedStrategy} (${budget.toLocaleString('fr-FR')} ♂)`,
+            culture,
+            invasion: inoculum,
+            budget,
+            remating,
+            strategy: selectedStrategy,
+            seed: randomSeed,
+            repetitions,
+            timestamp: new Date().toISOString().slice(0, 16).replace('T', ' ')
+          };
+          setSavedExperiments((prevExps) => [newExp, ...prevExps]);
+          setSimStatus('completed');
+          setNotification(`Simulation terminée : ${newExp.name} enregistrée avec succès sous l'identifiant ${newId}.`);
+          setTimeout(() => setSimStatus('idle'), 3500);
+          return 120; // Réinitialise l'affichage complet
+        }
+        return next;
+      });
+    }, stepIntervalMs);
   };
 
   const handleExportCsv = () => {
-    const cols = ['culture', 'invasion', 'budget', 'strategy', 'recoltes_sains_pct', 'recoltes_sains_nb', 'pourris_larves_pct', 'sterile_only_total_pct', 'larves_produites'];
+    const cols = ['culture', 'inoculum', 'budget', 'strategy', 'recoltes_sains_pct', 'recoltes_sains_nb', 'pourris_larves_pct', 'sterile_only_total_pct', 'larves_produites'];
     const csvContent = [
       cols.join(','),
       ...currentResultsList.map((r) => cols.map((c) => `"${r[c]}"`).join(','))
@@ -438,7 +344,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `modelly_tis_${culture.toLowerCase()}_${invasion.toLowerCase()}_b${budget}.csv`;
+    link.download = `modelly_tis_${culture.toLowerCase()}_${inoculum.toLowerCase()}_b${budget}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -448,7 +354,7 @@ export default function App() {
       engineVersion: ENGINE_VERSION,
       schemaVersion: SCHEMA_VERSION,
       exportedAt: new Date().toISOString(),
-      configuration: { culture, horizon, invasion, budget, remating, randomSeed, repetitions, bioParams },
+      configuration: { culture, horizon, inoculum, budget, remating, randomSeed, repetitions, modelParams },
       results: currentResultsList
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -460,215 +366,242 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  // Synchronisation des onglets secondaires de la vue d'ensemble avec les espaces de navigation
-  const handleSubTabChange = (tabId) => {
-    setActiveSubTab(tabId);
-    if (tabId === 'overview') setActiveSpace('overview');
-    else if (tabId === 'protocol') setActiveSpace('protocol');
-    else if (tabId === 'comparison') setActiveSpace('comparison');
-    else if (tabId === 'analytics') setActiveSpace('analytics');
-  };
-
-  const handleMainSpaceChange = (spaceId) => {
-    setActiveSpace(spaceId);
-    if (spaceId === 'overview') setActiveSubTab('overview');
-    else if (spaceId === 'protocol') setActiveSubTab('protocol');
-    else if (spaceId === 'comparison') setActiveSubTab('comparison');
-    else if (spaceId === 'analytics') setActiveSubTab('analytics');
+  // Synchronisation des onglets de navigation
+  const handleNavigationChange = (targetId) => {
+    setActiveSpace(targetId);
+    setActiveSubTab(targetId);
+    if (typeof window !== 'undefined' && window.history) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', targetId);
+      window.history.replaceState({}, '', url.toString());
+    }
   };
 
   const NAV_ITEMS = [
-    { id: 'overview', label: "Vue d'ensemble", icon: Leaf },
-    { id: 'experiments', label: 'Expériences', icon: FlaskConical },
+    { id: 'overview', label: "Vue d'ensemble", icon: Home },
+    { id: 'parameters', label: 'Paramètres', icon: SlidersHorizontal },
+    { id: 'model', label: 'Modèle & Hypothèses', icon: BookOpen },
+    { id: 'dynamics', label: 'Dynamiques Agents', icon: Activity },
     { id: 'studio', label: 'Simulation', icon: Play },
     { id: 'comparison', label: 'Comparaison', icon: BarChart3 },
     { id: 'analytics', label: 'Résultats', icon: Layers },
-    { id: 'protocol', label: 'Publications', icon: BookOpen }
+    { id: 'experiments', label: 'Expériences', icon: FlaskConical }
   ];
 
   return (
     <div className="min-h-screen bg-[#F8F7F2] text-[#1B201C] font-sans antialiased selection:bg-[#145A3D] selection:text-[#F8F7F2]">
       {/* ===================================================================
-          1. BANDEAU SUPÉRIEUR (CONFORME EXACTEMENT À LA MAQUETTE FOURNIE)
+          LAYOUT GLOBAL : BARRE LATÉRALE GAUCHE + ESPACE DE TRAVAIL PRINCIPAL
          =================================================================== */}
-      <header className="border-b border-[#D6DDD4] bg-[#F8F7F2] px-4 sm:px-8 py-3.5">
-        <div className="max-w-[1520px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Logo Modelly & Sous-titre TIS Research */}
-          <div className="flex items-center gap-3 shrink-0">
-            <ModellyLogo className="w-10 h-10 shrink-0" />
-            <div>
-              <div className="font-serif font-bold text-2xl tracking-tight text-[#145A3D] leading-none">
-                Modelly
+      <div className="w-full flex flex-col lg:flex-row min-h-screen">
+        {/* SIDEBAR GAUCHE (Conforme à la maquette) */}
+        <aside className="w-full lg:w-52 shrink-0 border-b lg:border-b-0 lg:border-r border-[#D6DDD4] bg-[#F8F7F2] p-4 flex flex-col justify-between gap-6">
+          <div className="space-y-4">
+            {/* Logo Modelly & Sous-titre TIS Research */}
+            <div className="flex items-center gap-2.5 px-1 pt-0.5">
+              <ModellyLogo className="w-8 h-8 shrink-0" />
+              <div>
+                <div className="font-serif font-bold text-xl tracking-tight text-[#145A3D] leading-none">
+                  Modelly
+                </div>
+                <div className="text-[10px] font-sans text-[#657068] tracking-wider mt-0.5 font-medium">
+                  TIS Research
+                </div>
               </div>
-              <div className="text-[11px] font-sans text-[#657068] tracking-wider mt-0.5 font-medium">
-                TIS Research
-              </div>
             </div>
+
+            {/* Menu de navigation latérale */}
+            <nav aria-label="Navigation latérale" className="space-y-0.5">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const active = activeSpace === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleNavigationChange(item.id)}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all text-left cursor-pointer',
+                      active
+                        ? 'bg-[#DDEADF] text-[#145A3D] font-semibold'
+                        : 'text-[#1B201C] hover:bg-[#F0F2EB]'
+                    )}
+                  >
+                    <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-[#145A3D]' : 'text-[#1B201C]')} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
           </div>
-
-          {/* Centre : Fil d'ariane & Grand Titre Éditorial */}
-          <div className="flex-1 text-center md:px-4">
-            <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-[#657068] font-medium">
-              RECHERCHE AGRONOMIQUE / ÉTUDE 01
-            </div>
-            <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#1B201C] tracking-tight leading-snug">
-              Impact des stratégies <em className="italic font-normal text-[#347A55]">TIS</em> selon la culture
-            </h1>
-            <div className="text-xs sm:text-sm text-[#657068] font-sans mt-0.5">
-              Comparaison expérimentale • Fraise vs Cerise
-            </div>
-          </div>
-
-          {/* Droite : Boutons d'action principaux */}
-          <div className="flex items-center gap-2.5 shrink-0 self-end md:self-center">
-            <button
-              type="button"
-              onClick={() => setExportModalOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#D6DDD4] bg-white px-3.5 py-2 text-xs font-medium text-[#1B201C] hover:bg-[#F0F2EB] transition-colors shadow-2xs cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5 text-[#657068]" />
-              <span>Exporter le rapport</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setActiveSpace('studio');
-                setActiveSubTab('overview');
-              }}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#145A3D] px-4 py-2 text-xs font-medium text-[#F8F7F2] hover:bg-[#347A55] transition-colors shadow-xs cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Nouvelle simulation</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Barre de navigation secondaire par onglets (Pill bar sous le titre) */}
-        <div className="max-w-[1520px] mx-auto mt-3 pt-2.5 flex items-center gap-2 text-xs border-t border-[#E4EAE1]/70">
-          {[
-            { id: 'overview', label: "Vue d'ensemble" },
-            { id: 'protocol', label: 'Protocole' },
-            { id: 'comparison', label: 'Comparaison' },
-            { id: 'analytics', label: 'Analyses' }
-          ].map((tab, idx) => (
-            <React.Fragment key={tab.id}>
-              {idx > 0 && <span className="text-[#D6DDD4] font-light">|</span>}
-              <button
-                type="button"
-                onClick={() => handleSubTabChange(tab.id)}
-                className={cn(
-                  'px-3.5 py-1 rounded-md font-medium transition-all cursor-pointer',
-                  activeSubTab === tab.id
-                    ? 'bg-[#347A55] text-white shadow-2xs'
-                    : 'text-[#657068] hover:text-[#1B201C] hover:bg-[#F0F2EB]'
-                )}
-              >
-                {tab.label}
-              </button>
-            </React.Fragment>
-          ))}
-        </div>
-      </header>
-
-      {/* Notification discrète */}
-      {notification && (
-        <div className="max-w-[1520px] mx-auto px-4 sm:px-8 pt-3">
-          <div className="rounded-lg border border-[#347A55]/30 bg-[#DDEADF]/70 px-4 py-2 flex items-center justify-between text-xs text-[#145A3D]">
-            <span className="flex items-center gap-2 font-medium">
-              <Check className="w-4 h-4 shrink-0" />
-              {notification}
-            </span>
-            <button
-              type="button"
-              onClick={() => setNotification(null)}
-              className="underline text-[11px] cursor-pointer"
-            >
-              Fermer
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ===================================================================
-          2. CORPS DE L'APPLICATION : SIDEBAR GAUCHE + CONTENU PRINCIPAL
-         =================================================================== */}
-      <div className="max-w-[1520px] mx-auto px-4 sm:px-8 py-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* SIDEBAR GAUCHE (Exactement comme dans la maquette) */}
-        <aside className="lg:col-span-2 flex flex-col justify-between space-y-4">
-          <nav aria-label="Navigation latérale" className="space-y-1">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const active = activeSpace === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleMainSpaceChange(item.id)}
-                  className={cn(
-                    'w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-medium transition-all text-left cursor-pointer',
-                    active
-                      ? 'bg-[#DDEADF] text-[#145A3D] font-semibold'
-                      : 'text-[#1B201C] hover:bg-[#F0F2EB]'
-                  )}
-                >
-                  <Icon className={cn('w-4 h-4 shrink-0', active ? 'text-[#145A3D]' : 'text-[#657068]')} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
 
           {/* Bas de la barre latérale : Illustration pastorale & Carte Modélisation TIS */}
-          <div className="rounded-xl border border-[#D6DDD4] bg-white overflow-hidden shadow-2xs">
+          <div className="rounded-xl border border-[#D6DDD4] bg-white overflow-hidden shadow-2xs mt-auto">
             <PastoralLandscape className="w-full h-24 object-cover" />
-            <div className="p-3 bg-white border-t border-[#E8ECE3]">
+            <div className="p-2.5 bg-white border-t border-[#E8ECE3]">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[#145A3D]">
-                <Leaf className="w-3.5 h-3.5 text-[#347A55]" />
+                <SproutMiniIcon className="w-3.5 h-3.5 text-[#347A55] shrink-0" />
                 <span>Modélisation TIS</span>
               </div>
-              <p className="text-[11px] text-[#657068] mt-1 leading-snug">
+              <p className="text-[10px] text-[#657068] mt-0.5 leading-tight">
                 Dynamique des populations et optimisation des lâchers
               </p>
             </div>
           </div>
         </aside>
 
-        {/* CONTENU PRINCIPAL (10 COLONNES) */}
-        <main className="lg:col-span-10 space-y-5">
+        {/* ESPACE PRINCIPAL DE TRAVAIL */}
+        <main className="flex-1 min-w-0 p-4 sm:p-5 space-y-3.5">
+          {/* BANDEAU SUPÉRIEUR ÉDITORIAL (Fil d'Ariane, Titre, Boutons, Sous-Navigation) */}
+          <header className="space-y-2">
+            {/* Ligne 1 : Fil d'ariane avec trait horizontal vers les boutons */}
+            <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.16em] text-[#657068] font-medium">
+              <span className="whitespace-nowrap">RECHERCHE AGRONOMIQUE / ÉTUDE 01</span>
+              <span className="flex-1 border-t border-[#D6DDD4]"></span>
+            </div>
+
+            {/* Ligne 2 : Titre principal & Actions */}
+            <div className="flex flex-row items-center justify-between gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#1B201C] tracking-tight leading-tight whitespace-nowrap">
+                  Impact des stratégies <em className="italic font-normal text-[#347A55]">TIS</em> selon la culture
+                </h1>
+                <div className="text-xs text-[#657068] font-sans mt-0.5">
+                  Comparaison expérimentale • Fraise vs Cerise
+                </div>
+              </div>
+
+              {/* Boutons d'action principaux en haut à droite */}
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setExportModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#D6DDD4] bg-white px-3 py-1.5 text-xs font-medium text-[#1B201C] hover:bg-[#F0F2EB] transition-colors shadow-2xs cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#1B201C]" />
+                  <span>Exporter le rapport</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleNavigationChange('studio')}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#145A3D] px-3.5 py-1.5 text-xs font-medium text-white hover:bg-[#1E5E41] transition-colors shadow-2xs cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Nouvelle simulation</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Ligne 3 : Sous-navigation par onglets pills */}
+            <div className="flex items-center gap-2 pt-0.5 text-xs overflow-x-auto pb-1">
+              {[
+                { id: 'overview', label: "Vue d'ensemble" },
+                { id: 'parameters', label: 'Paramètres' },
+                { id: 'model', label: 'Modèle & Hypothèses' },
+                { id: 'dynamics', label: 'Dynamiques temporelles' },
+                { id: 'comparison', label: 'Comparaison' },
+                { id: 'analytics', label: 'Analyses' }
+              ].map((tab, idx) => (
+                <React.Fragment key={tab.id}>
+                  {idx > 0 && <span className="text-[#D6DDD4] font-light">|</span>}
+                  <button
+                    type="button"
+                    onClick={() => handleNavigationChange(tab.id)}
+                    className={cn(
+                      'px-3.5 py-1 rounded-md font-medium transition-all cursor-pointer whitespace-nowrap',
+                      activeSubTab === tab.id
+                        ? 'bg-[#347A55] text-white shadow-2xs'
+                        : 'text-[#657068] hover:text-[#1B201C] hover:bg-[#F0F2EB]'
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                </React.Fragment>
+              ))}
+            </div>
+          </header>
+
+          {/* Bannière de télémétrie stochastique en cours de simulation animée */}
+          {simStatus === 'running' && (
+            <div className="rounded-xl border border-[#A3C9A6] bg-[#EDF5EB] p-3 shadow-2xs space-y-2 animate-fade-in">
+              <div className="flex items-center justify-between text-xs text-[#145A3D]">
+                <div className="flex items-center gap-2 font-semibold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#145A3D] animate-ping" />
+                  <span>Simulation stochastique ABM en direct : Résolution journalière des interactions</span>
+                </div>
+                <div className="font-mono font-bold text-xs bg-white px-2 py-0.5 rounded border border-[#A3C9A6]">
+                  Jour {liveSimDay} / {horizon} ({Math.min(100, Math.round((liveSimDay / horizon) * 100))} %)
+                </div>
+              </div>
+              <div className="w-full bg-[#DDEADF] rounded-full h-2 overflow-hidden">
+                <div
+                  className="bg-[#145A3D] h-2 rounded-full transition-all duration-75 ease-out"
+                  style={{ width: `${Math.min(100, Math.round((liveSimDay / horizon) * 100))}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Notification discrète */}
+          {notification && (
+            <div className="rounded-lg border border-[#347A55]/30 bg-[#DDEADF]/70 px-4 py-2 flex items-center justify-between text-xs text-[#145A3D]">
+              <span className="flex items-center gap-2 font-medium">
+                <Check className="w-4 h-4 shrink-0" />
+                {notification}
+              </span>
+              <button
+                type="button"
+                onClick={() => setNotification(null)}
+                className="underline text-[11px] cursor-pointer"
+              >
+                Fermer
+              </button>
+            </div>
+          )}
+
           {/* ===============================================================
               ESPACE 1 : VUE D'ENSEMBLE (CONFORME EXACTEMENT À LA MAQUETTE)
              =============================================================== */}
           {activeSpace === 'overview' && (
-            <div className="space-y-5">
+            <div className="space-y-4">
               {/* SECTION 1 : LES TROIS PANNEAUX HORIZONTAUX ÉLÉGANTS */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* PANNEAU 1 : FRAISE (Fragaria × ananassa) */}
-                <div className="rounded-xl border border-[#D6DDD4] bg-white p-4 shadow-2xs flex flex-col justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2/5 shrink-0">
-                      <StrawberryBotanicalPlate className="w-full h-28" />
+                <div className="rounded-xl border border-[#D6DDD4] bg-white p-3 shadow-2xs flex flex-col justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-[45%] shrink-0 h-32 flex items-center justify-center">
+                      <StrawberryBotanicalPlate className="w-full h-full object-contain" />
                     </div>
-                    <div className="w-3/5">
-                      <h2 className="text-base font-serif font-bold text-[#1B201C] leading-tight">
+                    <div className="w-[55%]">
+                      <h2 className="text-base font-serif font-bold text-[#145A3D] leading-tight">
                         Fraise
                       </h2>
-                      <div className="text-xs italic text-[#657068] font-serif mb-2.5">
+                      <div className="text-[11px] italic text-[#1B201C] font-serif mb-2">
                         Fragaria × ananassa
                       </div>
 
-                      <ul className="space-y-2 text-[11px] text-[#1B201C]">
+                      <ul className="space-y-1 text-[10.5px] text-[#1B201C]">
                         <li className="flex items-start gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-[#657068] shrink-0 mt-0.5" />
-                          <span>Récolte continue (~ 60–120 jours)</span>
+                          <div>
+                            <div className="font-medium leading-tight">Récolte continue</div>
+                            <div className="text-[10px] text-[#657068] leading-tight">(= 60–120 jours)</div>
+                          </div>
                         </li>
                         <li className="flex items-start gap-1.5">
-                          <ShieldCheck className="w-3.5 h-3.5 text-[#657068] shrink-0 mt-0.5" />
-                          <span>Culture sensible aux infestations</span>
+                          <Leaf className="w-3.5 h-3.5 text-[#657068] shrink-0 mt-0.5" />
+                          <div>
+                            <div className="font-medium leading-tight">Culture sensible</div>
+                            <div className="text-[10px] text-[#657068] leading-tight">aux infestations</div>
+                          </div>
                         </li>
                         <li className="flex items-start gap-1.5">
                           <BarChart3 className="w-3.5 h-3.5 text-[#657068] shrink-0 mt-0.5" />
-                          <span>Pression d'invasion : faible à élevée</span>
+                          <div>
+                            <div className="font-medium leading-tight">Inoculum de départ :</div>
+                            <div className="text-[10px] text-[#657068] leading-tight">faible à élevé (K = 3 000)</div>
+                          </div>
                         </li>
                       </ul>
                     </div>
@@ -676,115 +609,136 @@ export default function App() {
                 </div>
 
                 {/* PANNEAU 2 : PRINCIPE DE LA TIS */}
-                <div className="rounded-xl border border-[#D6DDD4] bg-white p-4 shadow-2xs flex flex-col justify-between">
+                <div className="rounded-xl border border-[#D6DDD4] bg-white p-3 shadow-2xs flex flex-col justify-between">
                   <div>
                     <div className="text-center mb-1">
-                      <h2 className="text-sm font-serif font-bold text-[#1B201C] leading-tight">
+                      <h2 className="text-sm font-sans font-bold text-[#1B201C] leading-tight">
                         Principe de la TIS
                       </h2>
-                      <div className="text-[11px] text-[#657068]">
+                      <div className="text-[10.5px] text-[#657068]">
                         (Technique de l'Insecte Stérile)
                       </div>
                     </div>
-                    <TisMechanismDiagram className="w-full h-28" />
+                    <TisMechanismDiagram className="w-full h-32" />
                   </div>
                 </div>
 
                 {/* PANNEAU 3 : CERISE (Prunus avium) */}
-                <div className="rounded-xl border border-[#D6DDD4] bg-white p-4 shadow-2xs flex flex-col justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="w-3/5">
-                      <h2 className="text-base font-serif font-bold text-[#1B201C] leading-tight">
+                <div className="rounded-xl border border-[#D6DDD4] bg-white p-3 shadow-2xs flex flex-col justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-[45%] shrink-0 h-32 flex items-center justify-center">
+                      <CherryBotanicalPlate className="w-full h-full object-contain" />
+                    </div>
+                    <div className="w-[55%]">
+                      <h2 className="text-base font-serif font-bold text-[#145A3D] leading-tight">
                         Cerise
                       </h2>
-                      <div className="text-xs italic text-[#657068] font-serif mb-2.5">
+                      <div className="text-[11px] italic text-[#1B201C] font-serif mb-2">
                         Prunus avium
                       </div>
 
-                      <ul className="space-y-2 text-[11px] text-[#1B201C]">
+                      <ul className="space-y-1 text-[10.5px] text-[#1B201C]">
                         <li className="flex items-start gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-[#657068] shrink-0 mt-0.5" />
-                          <span>Récolte courte (~ 15–30 jours)</span>
+                          <div>
+                            <div className="font-medium leading-tight">Récolte courte</div>
+                            <div className="text-[10px] text-[#657068] leading-tight">(= 15–30 jours)</div>
+                          </div>
                         </li>
                         <li className="flex items-start gap-1.5">
-                          <Target className="w-3.5 h-3.5 text-[#657068] shrink-0 mt-0.5" />
-                          <span>Fenêtre d'intervention plus restreinte</span>
+                          <Leaf className="w-3.5 h-3.5 text-[#657068] shrink-0 mt-0.5" />
+                          <div>
+                            <div className="font-medium leading-tight">Fenêtre d'intervention</div>
+                            <div className="text-[10px] text-[#657068] leading-tight">plus restreinte</div>
+                          </div>
                         </li>
                         <li className="flex items-start gap-1.5">
                           <BarChart3 className="w-3.5 h-3.5 text-[#657068] shrink-0 mt-0.5" />
-                          <span>Pression d'invasion : modérée à élevée</span>
+                          <div>
+                            <div className="font-medium leading-tight">Inoculum de départ :</div>
+                            <div className="text-[10px] text-[#657068] leading-tight">modéré à élevé (K = 3 000)</div>
+                          </div>
                         </li>
                       </ul>
-                    </div>
-                    <div className="w-2/5 shrink-0">
-                      <CherryBotanicalPlate className="w-full h-28" />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* SECTION 2 : GRAND GRAPHIQUE CENTRAL + PANNEAU DE PARAMÈTRES */}
+              {/* SECTION 2 : GRAND GRAPHIQUE CENTRAL + PANNEAU DE PARAMÈTRES DU SCÉNARIO */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 {/* Graphique temporel : Dynamique des populations au cours du temps */}
                 <div className="lg:col-span-8 rounded-xl border border-[#D6DDD4] bg-white p-4 shadow-2xs flex flex-col justify-between">
                   <OverviewPopulationChart
                     selectedStrategy={selectedStrategy}
                     selectedBudget={budget}
-                    selectedInvasion={invasion}
+                    selectedInvasion={inoculum}
+                    liveSimDay={simStatus === 'running' ? liveSimDay : 120}
+                    isSimulating={simStatus === 'running'}
                   />
                 </div>
 
                 {/* Panneau de droite : Paramètres du scénario */}
                 <div className="lg:col-span-4 rounded-xl border border-[#D6DDD4] bg-white p-4 shadow-2xs flex flex-col justify-between space-y-3">
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 border-b border-[#E8ECE3] pb-2 text-[#1B201C] font-semibold text-sm">
-                      <SlidersHorizontal className="w-4 h-4 text-[#347A55]" />
-                      <span>Paramètres du scénario</span>
+                    <div className="flex items-center gap-2 border-b border-[#E8ECE3] pb-2 text-[#1B201C]">
+                      <Settings className="w-4 h-4 text-[#1B201C]" />
+                      <span className="font-serif font-bold text-sm">Paramètres du scénario</span>
                     </div>
 
-                    {/* Sélecteur de Culture */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-[#1B201C] block">
+                    {/* Ligne 1 : Culture */}
+                    <div className="grid grid-cols-12 items-center gap-2">
+                      <label className="col-span-5 text-xs text-[#1B201C] font-normal">
                         Culture
                       </label>
-                      <div className="relative">
+                      <div className="col-span-7 relative">
                         <select
                           value={culture}
                           onChange={(e) => setCulture(e.target.value)}
-                          className="w-full appearance-none rounded-lg border border-[#D6DDD4] bg-[#F8F7F2] px-3 py-1.5 text-xs text-[#1B201C] font-medium pr-8 cursor-pointer"
+                          className="w-full appearance-none rounded-lg border border-[#D6DDD4] bg-white pl-8 pr-7 py-1.5 text-xs text-[#1B201C] font-normal cursor-pointer shadow-2xs"
                         >
-                          <option value="Fraise">🍓 Fraise</option>
-                          <option value="Cerise">🍒 Cerise</option>
+                          <option value="Fraise">Fraise</option>
+                          <option value="Cerise">Cerise</option>
                         </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-[#657068] absolute right-2.5 top-2.5 pointer-events-none" />
+                        <div className="absolute left-2.5 top-2 pointer-events-none">
+                          {culture === 'Fraise' ? (
+                            <StrawberryMiniIcon className="w-3.5 h-3.5" />
+                          ) : (
+                            <CherryMiniIcon className="w-3.5 h-3.5" />
+                          )}
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-[#1B201C] absolute right-2.5 top-2 pointer-events-none" />
                       </div>
                     </div>
 
-                    {/* Sélecteur Pression d'invasion */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-[#1B201C] block">
-                        Pression d'invasion
+                    {/* Ligne 2 : Inoculum de départ (remplace pression d'invasion) */}
+                    <div className="grid grid-cols-12 items-center gap-2">
+                      <label className="col-span-5 text-xs text-[#1B201C] font-normal">
+                        Inoculum de départ
                       </label>
-                      <div className="relative">
+                      <div className="col-span-7 relative">
                         <select
-                          value={invasion}
-                          onChange={(e) => setInvasion(e.target.value)}
-                          className="w-full appearance-none rounded-lg border border-[#D6DDD4] bg-[#F8F7F2] px-3 py-1.5 text-xs text-[#1B201C] font-medium pr-8 cursor-pointer"
+                          value={inoculum}
+                          onChange={(e) => setInoculum(e.target.value)}
+                          className="w-full appearance-none rounded-lg border border-[#D6DDD4] bg-white pl-8 pr-7 py-1.5 text-xs text-[#1B201C] font-normal cursor-pointer shadow-2xs font-medium"
                         >
-                          <option value="Faible">📊 Faible (180 adultes à J0)</option>
-                          <option value="Modérée">📊 Modérée (600 adultes à J0)</option>
-                          <option value="Forte">📊 Forte (1 800 adultes à J0)</option>
+                          <option value="Faible">Faible (180 ind.)</option>
+                          <option value="Modérée">Modérée (600 ind.)</option>
+                          <option value="Forte">Forte (K = 3 000 ind.)</option>
                         </select>
-                        <ChevronDown className="w-3.5 h-3.5 text-[#657068] absolute right-2.5 top-2.5 pointer-events-none" />
+                        <div className="absolute left-2.5 top-2 pointer-events-none">
+                          <InvasionBarsIcon className="w-3.5 h-3.5 text-[#657068]" />
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 text-[#1B201C] absolute right-2.5 top-2 pointer-events-none" />
                       </div>
                     </div>
 
-                    {/* Stratégie de lâcher : Quotidien | J+3 | J+7 */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-[#1B201C] block">
+                    {/* Ligne 3 : Stratégie de lâcher */}
+                    <div className="grid grid-cols-12 items-center gap-2">
+                      <label className="col-span-5 text-xs text-[#1B201C] font-normal">
                         Stratégie de lâcher
                       </label>
-                      <div className="grid grid-cols-3 gap-1.5">
+                      <div className="col-span-7 flex items-center rounded-lg border border-[#D6DDD4] bg-white p-0.5 shadow-2xs">
                         {[
                           { id: 'Daily', label: 'Quotidien' },
                           { id: 'Every 3 days', label: 'J+3' },
@@ -795,10 +749,10 @@ export default function App() {
                             type="button"
                             onClick={() => setSelectedStrategy(s.id)}
                             className={cn(
-                              'py-1.5 px-2 rounded-md border text-xs font-medium transition-all text-center cursor-pointer',
+                              'flex-1 py-1 px-1.5 rounded-md text-[11px] font-medium transition-all text-center cursor-pointer',
                               selectedStrategy === s.id
-                                ? 'bg-[#347A55] text-white border-[#347A55] shadow-2xs font-semibold'
-                                : 'bg-[#F8F7F2] text-[#1B201C] border-[#D6DDD4] hover:bg-[#E8ECE3]'
+                                ? 'bg-[#347A55] text-white shadow-2xs'
+                                : 'text-[#1B201C] hover:bg-[#F8F7F2]'
                             )}
                           >
                             {s.label}
@@ -807,32 +761,44 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Budget (unités / ha) */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-[#1B201C] flex justify-between items-center">
-                        <span>Budget (unités / ha)</span>
-                        <Coins className="w-3.5 h-3.5 text-[#657068]" />
+                    {/* Ligne 4 : Budget (unités / ha) */}
+                    <div className="grid grid-cols-12 items-center gap-2">
+                      <label className="col-span-5 text-xs text-[#1B201C] font-normal">
+                        Budget (unités / ha)
                       </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="20000"
-                        step="500"
-                        value={budget}
-                        onChange={(e) => setBudget(Number(e.target.value))}
-                        className="w-full rounded-lg border border-[#D6DDD4] bg-[#F8F7F2] px-3 py-1.5 text-xs font-mono font-medium text-[#1B201C]"
-                      />
+                      <div className="col-span-7 relative flex items-center">
+                        <div className="absolute left-2.5 pointer-events-none">
+                          <CoinsStackIcon className="w-3.5 h-3.5 text-[#657068]" />
+                        </div>
+                        <input
+                          type="text"
+                          value={budget.toLocaleString('fr-FR')}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value.replace(/\s/g, '').replace(/\D/g, ''), 10);
+                            if (!isNaN(val)) setBudget(val);
+                          }}
+                          className="w-full rounded-lg border border-[#D6DDD4] bg-white pl-8 pr-7 py-1.5 text-xs font-mono font-medium text-[#1B201C] shadow-2xs"
+                        />
+                        <div className="absolute right-2 flex flex-col pointer-events-none text-[#657068]">
+                          <ChevronsUpDown className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Bouton Lancer une simulation */}
+                  {/* Bouton Lancer une simulation avec traçage en direct */}
                   <button
                     type="button"
                     onClick={handleRunAndSaveExperiment}
-                    className="w-full py-2.5 px-4 rounded-lg bg-[#347A55] text-white font-medium text-xs hover:bg-[#145A3D] transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer mt-2"
+                    disabled={simStatus === 'running'}
+                    className="w-full py-2.5 px-4 rounded-lg bg-[#347A55] text-white font-medium text-xs hover:bg-[#145A3D] transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer mt-2 disabled:opacity-60"
                   >
-                    <Play className="w-3.5 h-3.5 fill-white" />
-                    <span>Lancer une simulation</span>
+                    <Play className={cn("w-3.5 h-3.5 fill-white text-white", simStatus === 'running' && "animate-spin")} />
+                    <span>
+                      {simStatus === 'running'
+                        ? `Simulation en direct (Jour ${liveSimDay}/${horizon})...`
+                        : 'Lancer une simulation'}
+                    </span>
                   </button>
                 </div>
               </div>
@@ -840,21 +806,21 @@ export default function App() {
               {/* SECTION 3 : DOMMAGES LARVAIRES, PIQÛRES STÉRILES & TABLEAU COMPARATIF */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 {/* Carte 1 : Dommages larvaires */}
-                <div className="md:col-span-3 rounded-xl border border-[#D6DDD4] bg-white p-4 shadow-2xs flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <Leaf className="w-4 h-4 text-[#347A55]" />
-                      <h3 className="text-xs font-bold text-[#1B201C]">
+                <div className="md:col-span-3 rounded-xl border border-[#D6DDD4] bg-white p-3.5 shadow-2xs flex flex-col justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <LarvaIcon className="w-6 h-6 shrink-0" />
+                    <div>
+                      <h3 className="text-sm font-serif font-bold text-[#1B201C] leading-tight">
                         Dommages larvaires
                       </h3>
+                      <p className="text-[10px] text-[#657068] mt-0.5">
+                        Part de fruits endommagés à la récolte
+                      </p>
                     </div>
-                    <p className="text-[10px] text-[#657068] mt-0.5">
-                      Part de fruits endommagés à la récolte
-                    </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 mt-4 pt-2 border-t border-[#E8ECE3]">
-                    <div>
+                  <div className="grid grid-cols-2 rounded-lg overflow-hidden border border-[#D6DDD4] mt-3">
+                    <div className="bg-[#EEF6EF] py-2.5 px-2 text-center">
                       <div className="text-2xl font-bold font-mono text-[#145A3D]">
                         -91 %
                       </div>
@@ -862,7 +828,7 @@ export default function App() {
                         (Fraise, J+3)
                       </div>
                     </div>
-                    <div>
+                    <div className="bg-[#FDF2EC] py-2.5 px-2 text-center border-l border-[#D6DDD4]">
                       <div className="text-2xl font-bold font-mono text-[#BF532E]">
                         -73 %
                       </div>
@@ -874,21 +840,21 @@ export default function App() {
                 </div>
 
                 {/* Carte 2 : Piqûres stériles */}
-                <div className="md:col-span-3 rounded-xl border border-[#D6DDD4] bg-white p-4 shadow-2xs flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <Target className="w-4 h-4 text-[#547B91]" />
-                      <h3 className="text-xs font-bold text-[#1B201C]">
+                <div className="md:col-span-3 rounded-xl border border-[#D6DDD4] bg-white p-3.5 shadow-2xs flex flex-col justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <SterileFlyIcon className="w-6 h-6 shrink-0" />
+                    <div>
+                      <h3 className="text-sm font-serif font-bold text-[#1B201C] leading-tight">
                         Piqûres stériles
                       </h3>
+                      <p className="text-[10px] text-[#657068] mt-0.5">
+                        Proportion de piqûres non viables
+                      </p>
                     </div>
-                    <p className="text-[10px] text-[#657068] mt-0.5">
-                      Proportion de piqûres non viables
-                    </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 mt-4 pt-2 border-t border-[#E8ECE3]">
-                    <div>
+                  <div className="grid grid-cols-2 rounded-lg overflow-hidden border border-[#D6DDD4] mt-3">
+                    <div className="bg-[#EEF6EF] py-2.5 px-2 text-center">
                       <div className="text-2xl font-bold font-mono text-[#145A3D]">
                         56 %
                       </div>
@@ -896,7 +862,7 @@ export default function App() {
                         (Fraise)
                       </div>
                     </div>
-                    <div>
+                    <div className="bg-[#FDF2EC] py-2.5 px-2 text-center border-l border-[#D6DDD4]">
                       <div className="text-2xl font-bold font-mono text-[#BF532E]">
                         48 %
                       </div>
@@ -908,32 +874,49 @@ export default function App() {
                 </div>
 
                 {/* Carte 3 : Tableau comparatif des stratégies */}
-                <div className="md:col-span-6 rounded-xl border border-[#D6DDD4] bg-white p-4 shadow-2xs overflow-hidden flex flex-col justify-between">
+                <div className="md:col-span-6 rounded-xl border border-[#D6DDD4] bg-white shadow-2xs overflow-hidden flex flex-col justify-between">
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-[#D6DDD4] text-[#657068] font-medium text-[11px]">
-                          <th className="py-1.5 text-left font-semibold">Stratégie</th>
-                          <th className="py-1.5 text-right font-semibold">Fraise (dommages)</th>
-                          <th className="py-1.5 text-right font-semibold">Cerise (dommages)</th>
-                          <th className="py-1.5 text-right font-semibold">Budget relatif</th>
+                        <tr className="bg-[#EAF2E9] border-b border-[#D6DDD4] text-[#1B201C] font-semibold text-[11px]">
+                          <th className="py-2 px-3 text-left border-r border-[#D6DDD4]">Stratégie</th>
+                          <th className="py-2 px-3 text-right border-r border-[#D6DDD4]">Fraise <span className="font-normal text-[#657068]">(dommages)</span></th>
+                          <th className="py-2 px-3 text-right border-r border-[#D6DDD4]">Cerise <span className="font-normal text-[#657068]">(dommages)</span></th>
+                          <th className="py-2 px-3 text-right">Budget relatif</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#E8ECE3] tabular-nums text-[11px]">
                         {[
-                          { name: 'Quotidien', fraise: '2,8 %', cerise: '7,9 %', budget: '1,40 ×' },
-                          { name: 'J+3', fraise: '3,1 %', cerise: '8,6 %', budget: '1,00 ×' },
-                          { name: 'J+7', fraise: '5,9 %', cerise: '12,4 %', budget: '0,72 ×' },
-                          { name: '70 % initial + maintenance', fraise: '3,4 %', cerise: '9,1 %', budget: '0,86 ×' },
-                          { name: '100 % initial', fraise: '2,9 %', cerise: '8,2 %', budget: '1,25 ×' }
-                        ].map((row, idx) => (
-                          <tr key={idx} className="hover:bg-[#F8F7F2] transition-colors">
-                            <td className="py-1.5 font-medium text-[#1B201C]">{row.name}</td>
-                            <td className="py-1.5 text-right font-mono text-[#145A3D] font-semibold">{row.fraise}</td>
-                            <td className="py-1.5 text-right font-mono text-[#BF532E] font-semibold">{row.cerise}</td>
-                            <td className="py-1.5 text-right font-mono text-[#657068]">{row.budget}</td>
-                          </tr>
-                        ))}
+                          { id: 'Daily', name: 'Quotidien', fraise: '2,8 %', cerise: '7,9 %', budget: '1,40 ×' },
+                          { id: 'Every 3 days', name: 'J+3', fraise: '3,1 %', cerise: '8,6 %', budget: '1,00 ×' },
+                          { id: 'Every 7 days', name: 'J+7', fraise: '5,9 %', cerise: '12,4 %', budget: '0,72 ×' },
+                          { id: '70% init + 7d maint', name: '70 % initial + maintenance', fraise: '3,4 %', cerise: '9,1 %', budget: '0,86 ×' },
+                          { id: '100% init', name: '100 % initial', fraise: '2,9 %', cerise: '8,2 %', budget: '1,25 ×' }
+                        ].map((row) => {
+                          const isSelected = row.id === selectedStrategy;
+                          return (
+                            <tr
+                              key={row.id}
+                              className={cn(
+                                'transition-colors',
+                                isSelected ? 'bg-[#EDF5EB] font-medium' : 'hover:bg-[#F8F7F2]'
+                              )}
+                            >
+                              <td className="py-1.5 px-3 font-medium text-[#1B201C] border-r border-[#E8ECE3]">
+                                {row.name}
+                              </td>
+                              <td className="py-1.5 px-3 text-right font-mono text-[#145A3D] font-semibold border-r border-[#E8ECE3]">
+                                {row.fraise}
+                              </td>
+                              <td className="py-1.5 px-3 text-right font-mono text-[#BF532E] font-semibold border-r border-[#E8ECE3]">
+                                {row.cerise}
+                              </td>
+                              <td className="py-1.5 px-3 text-right font-mono text-[#1B201C]">
+                                {row.budget}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -943,7 +926,40 @@ export default function App() {
           )}
 
           {/* ===============================================================
-              ESPACE 2 : SIMULATION STUDIO (SECTION 5)
+              NOUVEL ESPACE : ONGLET PARAMÈTRES DU MODÈLE
+             =============================================================== */}
+          {activeSpace === 'parameters' && (
+            <ParametersView
+              params={modelParams}
+              onParamsChange={(newParams) => setModelParams(newParams)}
+              onResetToDefaults={() => setModelParams(DEFAULT_MODEL_PARAMS)}
+            />
+          )}
+
+          {/* ===============================================================
+              NOUVEL ESPACE : ONGLET MODÈLE, ARCHITECTURE & HYPOTHÈSES
+             =============================================================== */}
+          {activeSpace === 'model' && (
+            <ModelArchitectureView
+              onNavigateToStudio={() => handleNavigationChange('studio')}
+              onNavigateToDynamics={() => handleNavigationChange('dynamics')}
+            />
+          )}
+
+          {/* ===============================================================
+              NOUVEL ESPACE : DYNAMIQUES DES AGENTS INSECTES & FRUITS
+             =============================================================== */}
+          {activeSpace === 'dynamics' && (
+            <AgentDynamicsCharts
+              initialCulture={culture}
+              initialInoculum={inoculum}
+              initialStrategy={selectedStrategy}
+              initialBudget={budget}
+            />
+          )}
+
+          {/* ===============================================================
+              ESPACE SIMULATION STUDIO (CONFIGURATION EXPERIMENTALE)
              =============================================================== */}
           {activeSpace === 'studio' && (
             <div className="space-y-5">
@@ -953,7 +969,7 @@ export default function App() {
                     Simulation Studio
                   </span>
                   <h2 className="text-xl font-serif font-bold text-[#1B201C]">
-                    Configuration expérimentale & Paramétrage avancé
+                    Configuration expérimentale & Lancement de simulation
                   </h2>
                 </div>
                 <div className="inline-flex rounded-lg border border-[#D6DDD4] bg-[#F8F7F2] p-1">
@@ -980,12 +996,12 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Les 3 colonnes logiques requises par la Section 5 */}
+              {/* Les 3 colonnes logiques */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                 {/* Colonne Gauche : Paramètres scientifiques */}
                 <div className="lg:col-span-4 rounded-xl border border-[#D6DDD4] bg-white p-5 space-y-4 shadow-2xs">
                   <h3 className="text-sm font-serif font-bold text-[#145A3D] border-b border-[#E8ECE3] pb-2">
-                    1. Paramètres scientifiques
+                    1. Paramètres du scénario
                   </h3>
 
                   <div className="space-y-3 text-xs">
@@ -1002,13 +1018,13 @@ export default function App() {
                     </div>
 
                     <div>
-                      <label className="block font-medium mb-1">Pression d'invasion initiale</label>
+                      <label className="block font-medium mb-1">Inoculum de départ</label>
                       <select
-                        value={invasion}
-                        onChange={(e) => setInvasion(e.target.value)}
-                        className="w-full rounded-lg border border-[#D6DDD4] bg-[#F8F7F2] p-2 text-xs"
+                        value={inoculum}
+                        onChange={(e) => setInoculum(e.target.value)}
+                        className="w-full rounded-lg border border-[#D6DDD4] bg-[#F8F7F2] p-2 text-xs font-medium"
                       >
-                        {INVASION_LEVELS.map((inv) => (
+                        {INOCULUM_LEVELS.map((inv) => (
                           <option key={inv.id} value={inv.id}>
                             {inv.label} ({inv.total} adultes à J0)
                           </option>
@@ -1070,30 +1086,30 @@ export default function App() {
                         <div>
                           <div className="flex justify-between text-[11px] font-medium mb-1">
                             <span>Compétitivité d'accouplement (η_mating)</span>
-                            <span className="font-mono text-[#145A3D]">{bioParams.etaMating.toFixed(2)}</span>
+                            <span className="font-mono text-[#145A3D]">{modelParams.etaMating.toFixed(2)}</span>
                           </div>
                           <input
                             type="range"
                             min="0.2"
                             max="1.0"
                             step="0.05"
-                            value={bioParams.etaMating}
-                            onChange={(e) => setBioParams((p) => ({ ...p, etaMating: Number(e.target.value) }))}
+                            value={modelParams.etaMating}
+                            onChange={(e) => setModelParams((p) => ({ ...p, etaMating: Number(e.target.value) }))}
                             className="w-full accent-[#145A3D] cursor-pointer"
                           />
                         </div>
                         <div>
                           <div className="flex justify-between text-[11px] font-medium mb-1">
                             <span>Compétitivité spermatique (η_sperm)</span>
-                            <span className="font-mono text-[#145A3D]">{bioParams.etaSperm.toFixed(2)}</span>
+                            <span className="font-mono text-[#145A3D]">{modelParams.etaSperm.toFixed(2)}</span>
                           </div>
                           <input
                             type="range"
                             min="0.2"
                             max="1.0"
                             step="0.05"
-                            value={bioParams.etaSperm}
-                            onChange={(e) => setBioParams((p) => ({ ...p, etaSperm: Number(e.target.value) }))}
+                            value={modelParams.etaSperm}
+                            onChange={(e) => setModelParams((p) => ({ ...p, etaSperm: Number(e.target.value) }))}
                             className="w-full accent-[#145A3D] cursor-pointer"
                           />
                         </div>
@@ -1120,7 +1136,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Colonne Centre : Visualisation du scénario */}
+                {/* Colonne Centre : Visualisation du protocole */}
                 <div className="lg:col-span-5 rounded-xl border border-[#D6DDD4] bg-white p-5 space-y-3 shadow-2xs">
                   <h3 className="text-sm font-serif font-bold text-[#145A3D] border-b border-[#E8ECE3] pb-2">
                     2. Visualisation du protocole
@@ -1180,10 +1196,11 @@ export default function App() {
                     <button
                       type="button"
                       onClick={handleRunAndSaveExperiment}
-                      className="w-full py-2.5 px-4 rounded-lg bg-[#145A3D] text-white font-medium text-xs hover:bg-[#347A55] transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                      disabled={simStatus === 'running'}
+                      className="w-full py-2.5 px-4 rounded-lg bg-[#145A3D] text-white font-medium text-xs hover:bg-[#347A55] transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-60"
                     >
-                      <Play className="w-3.5 h-3.5" />
-                      Lancer & Enregistrer
+                      <Play className={cn("w-3.5 h-3.5", simStatus === 'running' && "animate-spin")} />
+                      <span>{simStatus === 'running' ? `Simulation en cours (J+${liveSimDay})...` : 'Lancer & Enregistrer'}</span>
                     </button>
                     <button
                       type="button"
@@ -1200,14 +1217,14 @@ export default function App() {
           )}
 
           {/* ===============================================================
-              ESPACE 3 : EXPÉRIENCES (SECTION 10)
+              ESPACE EXPÉRIENCES (REGISTRE IMMUABLE)
              =============================================================== */}
           {activeSpace === 'experiments' && (
             <div className="space-y-5">
               <div className="rounded-xl border border-[#D6DDD4] bg-white p-5 flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-widest text-[#145A3D] font-semibold">
-                    Gestion des Expériences (Section 10)
+                    Registre des Expériences
                   </span>
                   <h2 className="text-xl font-serif font-bold text-[#1B201C]">
                     Registre immuable des simulations et métadonnées de reproductibilité
@@ -1270,7 +1287,7 @@ export default function App() {
                                 setCulture(exp.culture);
                                 setSelectedStrategy(exp.strategy);
                                 setBudget(exp.budget);
-                                setActiveSpace('overview');
+                                handleNavigationChange('overview');
                                 setNotification(`Expérience ${exp.id} chargée dans la vue d'ensemble.`);
                               }}
                               className="text-[#145A3D] hover:underline font-medium text-xs cursor-pointer"
@@ -1287,14 +1304,17 @@ export default function App() {
           )}
 
           {/* ===============================================================
-              ESPACE 4 : COMPARAISON (SECTION 7)
+              ESPACE COMPARAISON MULTI-SCÉNARIOS
              =============================================================== */}
           {activeSpace === 'comparison' && (
-            <div className="space-y-5">
+            <div className="space-y-6">
+              {/* Synthèse Décisionnelle Fondamentale : Fraise vs Cerise × Mono/Polyandrie */}
+              <AgronomicSynthesisCard />
+
               <div className="rounded-xl border border-[#D6DDD4] bg-white p-5 flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-widest text-[#145A3D] font-semibold">
-                    Comparison Lab (Section 7)
+                    Comparison Lab
                   </span>
                   <h2 className="text-xl font-serif font-bold text-[#1B201C]">
                     Comparaison multi-scénarios : Fraise vs Cerise & Stratégies
@@ -1332,47 +1352,191 @@ export default function App() {
                 })}
               </div>
 
-              {/* Graphique de comparaison directe */}
-              <div className="rounded-xl border border-[#D6DDD4] bg-white p-5 shadow-2xs">
-                <h3 className="text-base font-serif font-bold text-[#1B201C] mb-3">
-                  Comparaison directe : Taux de fruits sains récoltés selon la culture (%)
-                </h3>
-                <div className="h-64 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={STRATEGIES.map((s) => ({
-                        strategy: s.short,
-                        Fraise: computeSingleOutcome('Fraise', invasion, budget, remating, s.id).recoltes_sains_pct,
-                        Cerise: computeSingleOutcome('Cerise', invasion, budget, remating, s.id).recoltes_sains_pct,
-                      }))}
-                    >
-                      <CartesianGrid strokeDasharray="2 3" stroke="#E2E7DE" />
-                      <XAxis dataKey="strategy" tick={{ fontSize: 11 }} />
-                      <YAxis domain={[40, 95]} unit="%" tick={{ fontSize: 11 }} />
-                      <RechartsTooltip />
-                      <Legend />
-                      <Bar dataKey="Fraise" fill="#347A55" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="Cerise" fill="#BF532E" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+              {/* Comparaison Monoandrie vs Polyandrie (Accouplement unique vs multiple) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                <div className="lg:col-span-7 rounded-xl border border-[#D6DDD4] bg-white p-5 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#E8ECE3] pb-2.5">
+                    <div>
+                      <h3 className="text-base font-serif font-bold text-[#1B201C]">
+                        Plasticité reproductive : Monoandrie vs Polyandrie
+                      </h3>
+                      <p className="text-xs text-[#657068]">
+                        Taux de fruits sains (%) selon le régime d'accouplement des femelles pour chaque stratégie
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#145A3D] bg-[#DDEADF] px-2 py-0.5 rounded font-bold">
+                      η_sperm = 0.59
+                    </span>
+                  </div>
+
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={STRATEGIES.map((s) => {
+                          const mono = computeSingleOutcome(culture, inoculum, budget, 'first', s.id, modelParams);
+                          const poly = computeSingleOutcome(culture, inoculum, budget, 'preference', s.id, modelParams);
+                          return {
+                            strategy: s.short,
+                            'Monoandrie (1er accouplement)': mono.recoltes_sains_pct,
+                            'Polyandrie (accouplement multiple)': poly.recoltes_sains_pct,
+                          };
+                        })}
+                        margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="2 3" stroke="#E2E7DE" />
+                        <XAxis dataKey="strategy" tick={{ fontSize: 10 }} />
+                        <YAxis domain={[40, 95]} unit="%" tick={{ fontSize: 10 }} />
+                        <RechartsTooltip />
+                        <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
+                        <Line
+                          type="monotone"
+                          dataKey="Monoandrie (1er accouplement)"
+                          stroke="#145A3D"
+                          strokeWidth={2.6}
+                          dot={{ r: 3.5, fill: '#145A3D' }}
+                          isAnimationActive={false}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="Polyandrie (accouplement multiple)"
+                          stroke="#BF532E"
+                          strokeWidth={2.4}
+                          strokeDasharray="4 2"
+                          dot={{ r: 3.5, fill: '#BF532E' }}
+                          isAnimationActive={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="rounded-lg bg-[#F8F7F2] p-3 text-xs text-[#657068] leading-relaxed border border-[#E8ECE3]">
+                    <strong className="text-[#145A3D]">Enseignement clé :</strong> Sous monoandrie, un unique accouplement stérile suffit à inactiver la reproduction de la femelle pour toute son existence. Sous polyandrie (<Latex math="\eta_{\text{sperm}} = 0.59" />), la descendance fertile est partiellement restaurée si la femelle s'accouple plus tard avec un mâle sauvage, ce qui démontre la supériorité des lâchers fractionnés et réguliers (Quotidien, J+3, 70% + maintenance) pour maintenir un ratio stérile/sauvage élevé.
+                  </div>
+                </div>
+
+                {/* Comparaison synchronisée Fraise vs Cerise */}
+                <div className="lg:col-span-5 rounded-xl border border-[#D6DDD4] bg-white p-5 shadow-2xs space-y-3">
+                  <div className="border-b border-[#E8ECE3] pb-2.5">
+                    <h3 className="text-base font-serif font-bold text-[#1B201C]">
+                      Sensibilité selon la culture
+                    </h3>
+                    <p className="text-xs text-[#657068]">
+                      Fraise (récolte continue 100 j) vs Cerise (récolte courte 25 j)
+                    </p>
+                  </div>
+
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={BUDGET_PRESETS.map((b) => ({
+                          budget: b === 0 ? '0 ♂' : `${b / 1000}k ♂`,
+                          'Fraise (J+3)': computeSingleOutcome('Fraise', inoculum, b, remating, 'Every 3 days').recoltes_sains_pct,
+                          'Cerise (J+7)': computeSingleOutcome('Cerise', inoculum, b, remating, 'Every 7 days').recoltes_sains_pct,
+                        }))}
+                        margin={{ top: 10, right: 15, left: 0, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="2 3" stroke="#E2E7DE" />
+                        <XAxis dataKey="budget" tick={{ fontSize: 10 }} />
+                        <YAxis domain={[40, 95]} unit="%" tick={{ fontSize: 10 }} />
+                        <RechartsTooltip />
+                        <Legend wrapperStyle={{ fontSize: 11, paddingTop: 6 }} />
+                        <Line
+                          type="monotone"
+                          dataKey="Fraise (J+3)"
+                          stroke="#347A55"
+                          strokeWidth={2.4}
+                          dot={{ r: 3.5, fill: '#347A55' }}
+                          isAnimationActive={false}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="Cerise (J+7)"
+                          stroke="#BF532E"
+                          strokeWidth={2.4}
+                          dot={{ r: 3.5, fill: '#BF532E' }}
+                          isAnimationActive={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="rounded-lg bg-[#F8F7F2] p-3 text-xs text-[#657068] leading-relaxed border border-[#E8ECE3]">
+                    <strong className="text-[#145A3D]">Dynamique agronomique :</strong> La cerise atteint son plafond d'efficacité dès un lâcher ciblé concentré sur sa courte fenêtre de récolte, tandis que la fraise exige des lâchers maintenus sur toute la durée de floraison et fructification continue.
+                  </div>
+                </div>
+              </div>
+
+              {/* Tableau comparatif officiel des 6 stratégies */}
+              <div className="rounded-xl border border-[#D6DDD4] bg-white overflow-hidden shadow-2xs">
+                <div className="p-4 bg-[#F0F2EB] border-b border-[#D6DDD4]">
+                  <h3 className="text-sm font-serif font-bold text-[#1B201C]">
+                    Bilan comparatif synthétique des stratégies TIS ({culture} • Inoculum {inoculum} • {budget.toLocaleString('fr-FR')} ♂)
+                  </h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#D6DDD4] bg-white text-[#1B201C] font-semibold text-[11px]">
+                        <th className="py-2.5 px-4 text-left">Stratégie</th>
+                        <th className="py-2.5 px-3 text-left">Règle opérationnelle</th>
+                        <th className="py-2.5 px-3 text-right">Fruits sains (%)</th>
+                        <th className="py-2.5 px-3 text-right">Dommages larves (%)</th>
+                        <th className="py-2.5 px-3 text-right">Piqûres stériles (%)</th>
+                        <th className="py-2.5 px-3 text-right">Larves produites</th>
+                        <th className="py-2.5 px-4 text-right">Budget relatif</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E8ECE3] tabular-nums">
+                      {STRATEGIES.map((s) => {
+                        const out = computeSingleOutcome(culture, inoculum, budget, remating, s.id, modelParams);
+                        return (
+                          <tr key={s.id} className="hover:bg-[#F8F7F2] transition-colors">
+                            <td className="py-2.5 px-4 font-medium text-[#1B201C] flex items-center gap-2">
+                              <span style={{ color: s.color }}>{s.symbol}</span>
+                              <span>{s.label}</span>
+                            </td>
+                            <td className="py-2.5 px-3 text-[#657068] text-[11px]">{s.schedule}</td>
+                            <td className="py-2.5 px-3 text-right font-mono font-bold text-[#145A3D]">
+                              {out.recoltes_sains_pct.toFixed(1)} %
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-mono text-[#A83D36]">
+                              {out.pourris_larves_pct.toFixed(1)} %
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-mono text-[#547B91]">
+                              {out.sterile_only_total_pct.toFixed(1)} %
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-mono text-[#657068]">
+                              {out.larves_produites.toLocaleString('fr-FR')}
+                            </td>
+                            <td className="py-2.5 px-4 text-right font-mono font-semibold text-[#1B201C]">
+                              {s.relativeBudget.toFixed(2)} ×
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
           )}
 
           {/* ===============================================================
-              ESPACE 5 : RÉSULTATS / RESEARCH ANALYTICS (SECTION 8)
+              ESPACE RÉSULTATS / RESEARCH ANALYTICS
              =============================================================== */}
           {activeSpace === 'analytics' && (
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div className="rounded-xl border border-[#D6DDD4] bg-white p-5 flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <span className="text-[10px] font-mono uppercase tracking-widest text-[#145A3D] font-semibold">
-                    Research Analytics (Section 8)
+                    Research Analytics & Analyses Factorielles
                   </span>
                   <h2 className="text-xl font-serif font-bold text-[#1B201C]">
-                    Courbes Dose-Réponse, Frontière de Pareto & Heatmaps
+                    Analyses Comparatives : Front de Pareto, Répétitions & Réponses TIS
                   </h2>
+                  <p className="text-xs text-[#657068] mt-1">
+                    Exploration complète du compromis agronomique, de la dispersion stochastique inter-répétitions et des sensibilités factorielles.
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -1388,60 +1552,181 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 3 Courbes Dose-Réponse */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {INVASION_LEVELS.map((inv) => (
-                  <div key={inv.id} className="rounded-xl border border-[#D6DDD4] bg-white p-4 shadow-2xs">
-                    <h4 className="text-sm font-serif font-bold text-[#1B201C] mb-2">
-                      Invasion {inv.label} ({inv.total} ind. J0)
-                    </h4>
-                    <div className="h-56 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={BUDGET_PRESETS.map((b) => ({
-                            budget: b === 0 ? '0' : `${b / 1000}k`,
-                            'J+3': computeSingleOutcome(culture, inv.id, b, remating, 'Every 3 days').recoltes_sains_pct,
-                            'J+7': computeSingleOutcome(culture, inv.id, b, remating, 'Every 7 days').recoltes_sains_pct,
-                            '70%+7j': computeSingleOutcome(culture, inv.id, b, remating, '70% init + 7d maint').recoltes_sains_pct,
-                          }))}
-                        >
-                          <CartesianGrid strokeDasharray="2 3" stroke="#E2E7DE" />
-                          <XAxis dataKey="budget" tick={{ fontSize: 10 }} />
-                          <YAxis domain={[30, 95]} unit="%" tick={{ fontSize: 10 }} />
-                          <RechartsTooltip />
-                          <Line type="monotone" dataKey="J+3" stroke="#547B91" strokeWidth={2} dot={{ r: 2.5 }} />
-                          <Line type="monotone" dataKey="J+7" stroke="#BF532E" strokeWidth={2} dot={{ r: 2.5 }} />
-                          <Line type="monotone" dataKey="70%+7j" stroke="#145A3D" strokeWidth={2.5} dot={{ r: 2.5 }} />
-                        </LineChart>
-                      </ResponsiveContainer>
+              {/* 1. FRONTIÈRE DE PARETO (Compromis Dommages Larvaires vs Piqûres Stériles) */}
+              <ParetoFrontierChart
+                initialCulture={culture}
+                initialInoculum={inoculum}
+                remating={remating}
+              />
+
+              {/* 2. DISTRIBUTION DES 20 RÉPÉTITIONS (StripPlot & Incertitude stochastique) */}
+              <RepetitionsStripPlot
+                initialCulture={culture}
+                initialInoculum={inoculum}
+                initialBudget={budget}
+              />
+
+              {/* 3. COURBES DOSE-RÉPONSE PAR NIVEAU D'INOCULUM */}
+              <div className="rounded-xl border border-[#D6DDD4] bg-white p-5 shadow-2xs space-y-4">
+                <div className="border-b border-[#E8ECE3] pb-2.5">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#145A3D] font-semibold">
+                    Cinétique de Réponse au Budget
+                  </span>
+                  <h3 className="text-base font-serif font-bold text-[#1B201C] mt-0.5">
+                    Courbes Dose-Réponse selon l'Inoculum de départ ({culture})
+                  </h3>
+                  <p className="text-xs text-[#657068]">
+                    Évolution du taux de récolte saine (%) en fonction de l'effort consenti (0 à 18 000 ♂/ha) pour les 3 pressions initiales.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {INOCULUM_LEVELS.map((inv) => (
+                    <div key={inv.id} className="rounded-xl border border-[#D6DDD4] bg-[#FAFBF9] p-4 shadow-2xs">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="text-sm font-serif font-bold text-[#1B201C]">
+                          Inoculum {inv.label}
+                        </h4>
+                        <span className="text-[10px] font-mono text-[#657068] bg-white px-2 py-0.5 rounded border border-[#E8ECE3]">
+                          {inv.total} fondateurs J0
+                        </span>
+                      </div>
+                      <div className="h-56 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart
+                            data={BUDGET_PRESETS.map((b) => ({
+                              budget: b === 0 ? '0' : `${b / 1000}k`,
+                              'J+3': computeSingleOutcome(culture, inv.id, b, remating, 'Every 3 days').recoltes_sains_pct,
+                              'J+7': computeSingleOutcome(culture, inv.id, b, remating, 'Every 7 days').recoltes_sains_pct,
+                              '70%+7j': computeSingleOutcome(culture, inv.id, b, remating, '70% init + 7d maint').recoltes_sains_pct,
+                            }))}
+                          >
+                            <CartesianGrid strokeDasharray="2 3" stroke="#E2E7DE" />
+                            <XAxis dataKey="budget" tick={{ fontSize: 10 }} />
+                            <YAxis domain={[30, 95]} unit="%" tick={{ fontSize: 10 }} />
+                            <RechartsTooltip />
+                            <Line type="monotone" dataKey="J+3" stroke="#547B91" strokeWidth={2} dot={{ r: 2.5 }} isAnimationActive={false} />
+                            <Line type="monotone" dataKey="J+7" stroke="#BF532E" strokeWidth={2} dot={{ r: 2.5 }} isAnimationActive={false} />
+                            <Line type="monotone" dataKey="70%+7j" stroke="#145A3D" strokeWidth={2.5} dot={{ r: 2.5 }} isAnimationActive={false} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
-              {/* Frontière de Pareto */}
-              <div className="rounded-xl border border-[#D6DDD4] bg-white p-5 shadow-2xs">
-                <h3 className="text-base font-serif font-bold text-[#1B201C] mb-2">
-                  Frontière de Pareto : Pourriture larvaire (%) vs Piqûres stériles seules (%)
-                </h3>
-                <div className="h-60 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
-                      <CartesianGrid strokeDasharray="2 3" stroke="#E2E7DE" />
-                      <XAxis type="number" dataKey="sterile_only_total_pct" name="Piqûres stériles" unit="%" tick={{ fontSize: 11 }} />
-                      <YAxis type="number" dataKey="pourris_larves_pct" name="Pourris larves" unit="%" tick={{ fontSize: 11 }} />
-                      <ZAxis type="number" dataKey="recoltes_sains_pct" range={[60, 200]} name="Fruits sains" />
-                      <RechartsTooltip cursor={{ strokeDasharray: '3 3' }} />
-                      <Scatter name="Stratégies" data={currentResultsList} fill="#347A55" />
-                    </ScatterChart>
-                  </ResponsiveContainer>
+              {/* Heatmap / Matrice paramétrique (Budget vs Stratégie avec gradient de vert scientifique) */}
+              <div className="rounded-xl border border-[#D6DDD4] bg-white p-5 shadow-2xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E8ECE3] pb-3">
+                  <div>
+                    <h3 className="text-base font-serif font-bold text-[#1B201C]">
+                      Matrice paramétrique de réponse TIS (Budget vs Stratégie)
+                    </h3>
+                    <p className="text-xs text-[#657068]">
+                      Distribution croisée des performances agronomiques pour l'ensemble des combinaisons ({culture} • Inoculum {inoculum})
+                    </p>
+                  </div>
+
+                  {/* Sélecteur de métrique pour la Heatmap */}
+                  <div className="flex items-center gap-1.5 p-1 rounded-lg bg-[#F0F2EB] border border-[#D6DDD4] text-xs">
+                    {[
+                      { id: 'recoltes_sains_pct', label: 'Fruits sains (%)' },
+                      { id: 'pourris_larves_pct', label: 'Dommages larvaires (%)' },
+                      { id: 'sterile_only_total_pct', label: 'Piqûres stériles (%)' }
+                    ].map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setHeatmapMetric(m.id)}
+                        className={cn(
+                          'px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap',
+                          heatmapMetric === m.id
+                            ? 'bg-[#145A3D] text-white shadow-2xs'
+                            : 'text-[#657068] hover:text-[#1B201C]'
+                        )}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tableau Heatmap interactif avec coloration scientifique */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-[#F8F7F2] border-y border-[#D6DDD4]">
+                        <th className="py-2.5 px-4 text-left font-semibold text-[#1B201C] w-56">Stratégie de lâcher</th>
+                        {BUDGET_PRESETS.map((b) => (
+                          <th key={b} className="py-2.5 px-3 text-center font-mono font-bold text-[#1B201C]">
+                            {b === 0 ? 'Témoin (0 ♂)' : `${b.toLocaleString('fr-FR')} ♂ / ha`}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E8ECE3]">
+                      {STRATEGIES.map((s) => (
+                        <tr key={s.id} className="hover:bg-[#FAFBF9] transition-colors">
+                          <td className="py-2.5 px-4 font-medium text-[#1B201C] flex items-center gap-2">
+                            <span style={{ color: s.color }}>{s.symbol}</span>
+                            <span>{s.label}</span>
+                          </td>
+                          {BUDGET_PRESETS.map((b) => {
+                            const out = computeSingleOutcome(culture, inoculum, b, remating, s.id, modelParams);
+                            const val = out[heatmapMetric];
+
+                            // Coloration scientifique adaptative selon la métrique
+                            let bg = '#FFFFFF';
+                            let textCol = '#1B201C';
+                            if (heatmapMetric === 'recoltes_sains_pct') {
+                              // Taux de fruits sains : vert botanique (50% -> 90%)
+                              const norm = Math.max(0, Math.min(1, (val - 45) / 45));
+                              bg = `rgba(20, 90, 61, ${(0.10 + 0.85 * norm).toFixed(2)})`;
+                              if (norm > 0.45) textCol = '#FFFFFF';
+                            } else if (heatmapMetric === 'pourris_larves_pct') {
+                              // Dommages larvaires : terracotta / rouille (0.5% -> 30%)
+                              const norm = Math.max(0, Math.min(1, (val - 0.5) / 30));
+                              bg = `rgba(168, 61, 54, ${(0.10 + 0.85 * norm).toFixed(2)})`;
+                              if (norm > 0.45) textCol = '#FFFFFF';
+                            } else {
+                              // Piqûres stériles : bleu analytique (0% -> 10%)
+                              const norm = Math.max(0, Math.min(1, val / 8));
+                              bg = `rgba(84, 123, 145, ${(0.10 + 0.85 * norm).toFixed(2)})`;
+                              if (norm > 0.45) textCol = '#FFFFFF';
+                            }
+
+                            return (
+                              <td
+                                key={b}
+                                className="py-2.5 px-3 text-center transition-all cursor-default"
+                                style={{ backgroundColor: bg }}
+                                title={`${s.label} (${b} ♂) : Fruits sains: ${out.recoltes_sains_pct.toFixed(1)}% | Larves: ${out.pourris_larves_pct.toFixed(1)}% | Stériles: ${out.sterile_only_total_pct.toFixed(1)}%`}
+                              >
+                                <span
+                                  className="font-mono font-bold text-xs inline-block"
+                                  style={{ color: textCol }}
+                                >
+                                  {val.toFixed(1)} %
+                                </span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="rounded-lg bg-[#F8F7F2] p-3 text-xs text-[#657068] leading-relaxed border border-[#E8ECE3]">
+                  <strong className="text-[#145A3D]">Interprétation décisionnelle :</strong> Le gradient de couleur met immédiatement en évidence la saturation de l'effet TIS. À partir de 4 500 à 9 000 ♂/ha, la plupart des stratégies atteignent un plateau où l'investissement additionnel n'apporte qu'un gain marginal. Les stratégies J+3 et 70 % + maintenance offrent le meilleur compromis efficacité/coût.
                 </div>
               </div>
             </div>
           )}
 
           {/* ===============================================================
-              ESPACE 6 : PROTOCOLE SCIENTIFIQUE & PUBLICATIONS (SECTION 11)
+              ESPACE PROTOCOLE & FORMULATIONS MATHÉMATIQUES
              =============================================================== */}
           {activeSpace === 'protocol' && (
             <div className="space-y-6">
@@ -1456,7 +1741,6 @@ export default function App() {
                   Formulation rigoureuse des probabilités d'accouplement, de la compétition spermatique post-copulatoire et des fonctions d'aléas journaliers de pourriture des fruits.
                 </p>
 
-                {/* Blocs d'équations avec KaTeX */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                   <div className="p-4 rounded-xl border border-[#D6DDD4] bg-[#F8F7F2] space-y-2">
                     <h3 className="font-serif font-semibold text-sm text-[#145A3D]">
@@ -1523,14 +1807,12 @@ export default function App() {
         </main>
       </div>
 
-      {/* ===================================================================
-          3. BOÎTE DE DIALOGUE DU RAPPORT SCIENTIFIQUE (SECTION 12)
-         =================================================================== */}
+      {/* BOÎTE DE DIALOGUE DU RAPPORT SCIENTIFIQUE */}
       <ScientificReportModal
         isOpen={exportModalOpen}
         onClose={() => setExportModalOpen(false)}
         culture={culture}
-        invasion={invasion}
+        invasion={inoculum}
         budget={budget}
         remating={remating}
         rematingLabel={REMATING_LABEL_MAP[remating]}
@@ -1538,7 +1820,7 @@ export default function App() {
         summaryStats={summaryStats}
         randomSeed={randomSeed}
         repetitions={repetitions}
-        bioParams={bioParams}
+        bioParams={modelParams}
         engineVersion={ENGINE_VERSION}
         schemaVersion={SCHEMA_VERSION}
         onExportCsv={handleExportCsv}
